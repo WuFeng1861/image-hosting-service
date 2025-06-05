@@ -27,7 +27,7 @@ export class ImagesService {
   async saveImages(files: Express.Multer.File[]): Promise<Image[]> {
     try {
       const domain = this.configService.get<string>('DOMAIN') || '127.0.0.1';
-      const protocol = 'http'; // 根据需要可以配置为https
+      const protocol = 'https'; // 根据需要可以配置为https
       
       // 计算所有文件的哈希值
       const fileHashes = await Promise.all(
