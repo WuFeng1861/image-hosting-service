@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   HttpException,
@@ -61,6 +62,18 @@ export class ImagesController {
   @Get()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.imagesService.findAll(paginationDto);
+  }
+
+  /**
+   * 清理上传目录里不该存在的文件（非图片扩展名）+ 清理指向缺失文件的记录。
+   * 默认 dryRun=true：先看报告，确认后再传 dryRun=false 执行。
+   */
+  @Post('cleanup')
+  cleanup(@Body() body?: { dryRun?: boolean; removeOrphanRecords?: boolean }) {
+    return this.imagesService.cleanupUploadDir({
+      dryRun: body?.dryRun !== false,
+      removeOrphanRecords: body?.removeOrphanRecords !== false,
+    });
   }
 
   @Get(':id')

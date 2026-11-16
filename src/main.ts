@@ -121,6 +121,27 @@ async function bootstrap() {
     }),
   );
 
+  // 静态资源缺失（ENOENT / EACCES 等）按 404 返回。
+  // 不做这层处理的话：express.static 的 fallthrough:false 会 next(err)，
+  // 而该 err 是 http-errors 的实例、不是 NestJS HttpException，
+  // 会被全局 @Catch() 过滤器兜底成 500，把「文件不存在」伪装成「服务器内部错误」。
+  app.use(
+    '/images',
+    (
+      err: (Error & { status?: number }) | null,
+      _req: express.Request,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      const code = (err as NodeJS.ErrnoException | null)?.code;
+      if (err && (err.status === 404 || code === 'ENOENT' || code === 'EACCES')) {
+        res.status(404).type('text/plain').send('Not Found');
+        return;
+      }
+      next(err);
+    },
+  );
+
   // 上传单独限流：60 次 / 10 分钟 / IP
   app.use(
     '/api/images/upload',
